@@ -2,53 +2,23 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>اطلاعات من</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>MineChill</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
-    .card { background: var(--tg-theme-secondary-bg-color); padding: 15px; border-radius: 10px; margin-top: 20px; }
-    .row { margin-bottom: 10px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 5px; }
-    .label { font-weight: bold; opacity: 0.7; }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h2>اطلاعات شما</h2>
-  <div id="content" class="card">در حال بارگذاری...</div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+  <div id="tab-container"></div>
 
-    const initData = tg.initData;
-    if (!initData) {
-      document.getElementById('content').innerText = 'خطا: لطفاً از داخل ربات باز کنید.';
-    } else {
-      // درخواست به Supabase Edge Function (آدرس خود را جایگزین کنید)
-      fetch('https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const u = data.user;
-          document.getElementById('content').innerHTML = `
-            <div class="row"><span class="label">آیدی:</span> ${u.id}</div>
-            <div class="row"><span class="label">نام:</span> ${u.first_name}</div>
-            <div class="row"><span class="label">نام خانوادگی:</span> ${u.last_name || 'ندارد'}</div>
-            <div class="row"><span class="label">یوزرنیم:</span> @${u.username || 'ندارد'}</div>
-          `;
-        } else {
-          document.getElementById('content').innerText = 'خطا در تأیید اطلاعات.';
-        }
-      })
-      .catch(() => {
-        document.getElementById('content').innerText = 'خطای شبکه.';
-      });
-    }
-  </script>
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="mining">ماین</div>
+    <div class="nav-item" data-tab="miners">ماینرها</div>
+    <div class="nav-item" data-tab="tasks">تسک‌ها</div>
+    <div class="nav-item" data-tab="friends">دوستان</div>
+    <div class="nav-item" data-tab="profile">پروفایل</div>
+  </nav>
+
+  <script src="js/app.js"></script>
 </body>
 </html>
