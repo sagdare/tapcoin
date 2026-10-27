@@ -2,7 +2,7 @@ import { store } from '../store.js';
 import { syncData, updateLocal } from '../state.js';
 import { api } from '../api.js';
 import { fa, toast, $ } from '../ui.js';
-import { haptic, getTelegramUser } from '../telegram.js'; // اضافه شد برای عکس پروفایل
+import { haptic, getTelegramUser } from '../telegram.js';
 import {
   BASE_HASHRATE,
   LEVEL_RATE_MULTIPLIER,
@@ -13,40 +13,46 @@ import {
 
 let ticker = null;
 
-// فرمت‌دهی سرعت
-const formatRate = (rate) => {
-  const v = Number(rate) || 0;
-  if (v >= 1) return v.toFixed(2);
-  if (v >= 0.001) return v.toFixed(4);
-  return v.toFixed(6);
+// تبدیل اعداد انگلیسی به فارسی
+const toFaDigits = (str) => {
+  return String(str).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 };
 
-// فرمت‌دهی کوین‌ها (دقیقاً 6 رقم اعشار)
-function formatCoins(n) {
+// فرمت‌دهی سرعت (TH/s)
+const formatRate = (rate) => {
+  const v = Number(rate) || 0;
+  if (v >= 1) return toFaDigits(v.toFixed(2));
+  if (v >= 0.001) return toFaDigits(v.toFixed(4));
+  return toFaDigits(v.toFixed(4));
+};
+
+// ۸ رقم اعشار برای شمارنده وسط صفحه
+function formatCoins8(n) {
   const v = Number(n) || 0;
-  return v.toFixed(6);
+  return toFaDigits(v.toFixed(6));
 }
 
-// محاسبه سرعت بر اساس لول
+// ۱ رقم اعشار برای موجودی بالای صفحه و خروجی ۲۴ ساعته
+function formatCoins1(n) {
+  const v = Number(n) || 0;
+  return toFaDigits(v.toFixed(1));
+}
+
 function hashRateForLevel(level) {
   return BASE_HASHRATE * Math.pow(LEVEL_RATE_MULTIPLIER, Math.max(0, level - 1));
 }
 
-// محاسبه کل ماین شده در 24 ساعت اخیر
 function currentDailyMined(s) {
   const elapsed = Math.max(0, (Date.now() - new Date(s.last_collect).getTime()) / 1000);
-  // استفاده از سرعتِ محاسبه‌شده از روی لول، نه دیتابیس
   const currentRate = hashRateForLevel(s.level);
   return (Number(s.daily_mined) || 0) + elapsed * currentRate;
 }
 
-// ظرفیت باقی‌مانده
 function remainingCap(s) {
   const cap = dailyCapForLevel(s.level);
   return Math.max(0, cap - currentDailyMined(s));
 }
 
-// تایمر
 function getRemainingTime(s) {
   const last = new Date(s.last_collect).getTime();
   const target = last + 24 * 60 * 60 * 1000;
@@ -56,7 +62,7 @@ function getRemainingTime(s) {
   const m = Math.floor((diff / (1000 * 60)) % 60);
   const sec = Math.floor((diff / 1000) % 60);
   
-  return fa(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`);
+  return toFaDigits(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`);
 }
 
 export function renderMining() {
@@ -68,30 +74,29 @@ export function renderMining() {
     return;
   }
 
-  // گرفتن اطلاعات کاربر از تلگرام
   const user = getTelegramUser();
   const photoUrl = user?.photo_url;
   
-  // اگر کاربر عکس داشت، عکس رو نشون بده، وگرنه آیکون پیش‌فرض
   const avatarHtml = photoUrl 
     ? `<img src="${photoUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
 
   const rate = hashRateForLevel(s.level);
-  const cap = dailyCapForLevel(s.level);
   const nextCost = upgradeCostForLevel(s.level);
   const canUpgrade = s.balance >= nextCost && s.level < MAX_LEVEL;
+  
+  // خروجی ۲۴ ساعته = سرعت در ۲۴ ساعت (۸۶۴۰۰ ثانیه)
+  const dailyOutput = rate * 86400;
 
   root.innerHTML = `
     <div class="top-header">
       <div class="user-info">
-        <!-- عکس پروفایل تلگرام -->
         <div class="avatar-circle">
           ${avatarHtml}
         </div>
         <div class="balance-pill">
           <img src="img/coin.png" class="mini-coin" alt="coin" onerror="this.style.display='none'"/>
-          <span id="top-balance">${fa(formatCoins(s.balance))} <span style="font-size:10px;color:var(--hint)">MCH</span></span>
+          <span id="top-balance">${formatCoins1(s.balance)} <span style="font-size:10px;color:var(--hint)">MCH</span></span>
           <button class="plus-btn">+</button>
         </div>
       </div>
@@ -121,9 +126,9 @@ export function renderMining() {
 
       <div class="reward-section">
         <div class="reward-label">پاداش برداشت‌نشده</div>
-        <div class="reward-value" id="live-pending">${fa(formatCoins(0))}<span class="currency">MCH</span></div>
+        <div class="reward-value" id="live-pending" style="font-size: 26px; direction: ltr; display:flex; justify-content:center; align-items:baseline;">${formatCoins8(0)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span></div>
         <div class="reward-sub">
-          <span>≈ $۰.۰۰۰۰</span> · <span id="live-rate">${fa(formatRate(rate))} TH/s</span>
+          <span>≈ $۰.۰۰۰۰</span> · <span id="live-rate">${formatRate(rate)} TH/s</span>
         </div>
       </div>
 
@@ -140,7 +145,7 @@ export function renderMining() {
         <div class="item-text">
           <div class="item-name">سرعت ماین</div>
         </div>
-        <div class="item-val" id="stat-rate">${fa(formatRate(rate))} TH/s</div>
+        <div class="item-val" id="stat-rate">${formatRate(rate)} TH/s</div>
       </div>
 
       <div class="list-item">
@@ -150,7 +155,7 @@ export function renderMining() {
         <div class="item-text">
           <div class="item-name">خروجی ۲۴ ساعته</div>
         </div>
-        <div class="item-val green-text">+${fa(cap)} MCH</div>
+        <div class="item-val green-text">+${formatCoins1(dailyOutput)} MCH</div>
       </div>
 
       <div class="list-item" id="upgrade-btn" style="cursor:pointer">
@@ -176,7 +181,7 @@ export function renderMining() {
 
 function startTicker() {
   if (ticker) clearInterval(ticker);
-  ticker = setInterval(tick, 200); // سرعت آپدیت رو کمی بیشتر کردم که بهتر ببینی
+  ticker = setInterval(tick, 200); 
   tick();
 }
 
@@ -184,22 +189,24 @@ function tick() {
   const s = store.data?.state;
   if (!s) return;
   
-  // محاسبه زنده
   const elapsed = (Date.now() - store.pendingAt) / 1000;
-  const liveRate = hashRateForLevel(s.level); // سرعت بر اساس لول
+  const liveRate = hashRateForLevel(s.level); 
   const liveRaw = store.pendingBase + elapsed * liveRate; 
   const rem = remainingCap(s);
   const live = Math.min(liveRaw, rem);
 
+  // شمارنده وسط با ۸ رقم اعشار
   const el = $('#live-pending');
-  if (el) el.innerHTML = `${fa(formatCoins(live))}<span class="currency">MCH</span>`;
+  if (el) el.innerHTML = `${formatCoins8(live)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span>`;
 
+  // دکمه با ۴ رقم اعشار
   const btn = $('#collect-btn');
   if (btn && !btn.classList.contains('loading')) {
-    btn.disabled = live < 0.000001 || rem <= 0;
-    btn.textContent = `دریافت پاداش · ${fa(formatCoins(live))} MCH`;
+    btn.disabled = live < 0.00000001 || rem <= 0;
+    btn.textContent = `دریافت پاداش · ${toFaDigits(live.toFixed(4))} MCH`;
   }
   
+  // تایمر
   const timer = $('#timer');
   if (timer) timer.textContent = getRemainingTime(s);
 }
@@ -229,7 +236,7 @@ async function collect() {
       d.state.last_collect = new Date().toISOString();
     });
     haptic('success');
-    toast(`+${fa(formatCoins(earned))} برداشت شد`, 'success');
+    toast(`+${formatCoins8(earned)} برداشت شد`, 'success');
     renderMining();
     btn.classList.remove('loading');
     return;
@@ -239,7 +246,7 @@ async function collect() {
     const r = await api('collect');
     if (r.success) {
       haptic('success');
-      toast(`+${fa(formatCoins(r.earned))} برداشت شد`, 'success');
+      toast(`+${formatCoins8(r.earned)} برداشت شد`, 'success');
       await syncData();
       renderMining();
     } else {
@@ -279,7 +286,6 @@ async function upgrade() {
     updateLocal(d => {
       d.state.balance -= cost;
       d.state.level += 1;
-      // نیازی به ست کردن rate نیست چون خودش محاسبه میشه
     });
     haptic('success');
     toast(`سطح ${fa(s.level + 1)} ✅`, 'success');
