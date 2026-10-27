@@ -1,7 +1,7 @@
 export const FUNCTION_URL = 'https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram';
 
 // سرعت پایه (پایین و واقعی)
-export const BASE_HASHRATE = 0.0001; 
+export const BASE_HASHRATE = 0.0005; 
 export const LEVEL_RATE_MULTIPLIER = 1.05; 
 export const MAX_LEVEL = 100;
 
