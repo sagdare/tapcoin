@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tap Coin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--card:#f1f1f4;--accent:#f5a623}
+@media (prefers-color-scheme:dark){:root{--bg:#111;--fg:#f2f2f2;--card:#1e1e22}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Tahoma,sans-serif;text-align:center;
+ padding:env(safe-area-inset-top,0) 16px env(safe-area-inset-bottom,0)}
+#bal{font-size:44px;font-weight:800;margin:20px 0 4px}
+#sub{opacity:.6;font-size:14px}
+#coin{width:240px;height:240px;border-radius:50%;margin:28px auto;font-size:110px;line-height:240px;cursor:pointer;
+ background:radial-gradient(circle at 35% 30%,#ffe08a,var(--accent));box-shadow:0 10px 40px #f5a62366;transition:transform .06s}
+#coin:active{transform:scale(.94)}
+.bar{height:12px;background:var(--card);border-radius:8px;overflow:hidden;margin:8px 0}
+#fill{height:100%;background:var(--accent);width:100%}
+.row{display:flex;gap:8px;margin-top:14px}
+button{flex:1;padding:12px;border:0;border-radius:12px;background:var(--card);color:var(--fg);font-size:15px;cursor:pointer}
+#top{display:none;text-align:right;margin-top:14px}
+#top div{padding:8px 12px;background:var(--card);border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between}
+.fl{position:fixed;font-weight:800;font-size:26px;color:var(--accent);pointer-events:none;animation:up .8s forwards}
+@keyframes up{to{transform:translateY(-90px);opacity:0}}
+</style>
+</head>
+<body>
+<div id="bal">…</div><div id="sub">در حال اتصال</div>
+<div id="coin">🪙</div>
+<div id="en">⚡ 0 / 0</div><div class="bar"><div id="fill"></div></div>
+<div class="row"><button id="up">⬆️ ارتقا</button><button id="tp">🏆 برترین‌ها</button><button id="inv">👥 دعوت</button></div>
+<div id="top"></div>
+<script>
+// ⚠️ این دو مقدار را بعد از ساخت پروژه تغییر بده
+const API = "https://rsxroqhfzzuyysjrlczl.supabase.co/functions/v1/api";
+const BOT_APP_LINK = "https://t.me/mamecoinbot/app"; // لینک Direct Link میني‌اپ
+
+const tg = Telegram.WebApp; tg.ready(); tg.expand();
+const $ = id => document.getElementById(id);
+let S = null, pending = 0, last = Date.now();
+
+async function call(action, data = {}) {
+  const r = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({initData: tg.initData, action, ...data})});
+  return r.json();
+}
+function render() {
+  if (!S) return;
+  $("bal").textContent = "🪙 " + Math.floor(S.balance).toLocaleString("fa-IR");
+  $("sub").textContent = "قدرت هر ضربه: " + S.tap_power;
+  $("en").textContent = `⚡ ${Math.floor(S.energy)} / ${S.max_energy}`;
+  $("fill").style.width = (S.energy / S.max_energy * 100) + "%";
+  $("up").textContent = "⬆️ ارتقا (" + S.upgrade_cost.toLocaleString("fa-IR") + ")";
+}
+// بازیابی انرژی سمت کلاینت (فقط ظاهری، سرور مرجع است)
+setInterval(() => { if (!S) return; const n = Date.now(); S.energy = Math.min(S.max_energy, S.energy + (n - last) / 1000); last = n; render(); }, 250);
+
+function tap(e) {
+  if (!S || S.energy < S.tap_power) return;
+  S.energy -= S.tap_power; S.balance += S.tap_power; pending++;
+  tg.HapticFeedback && tg.HapticFeedback.impactOccurred("light");
+  const f = document.createElement("div"); f.className = "fl"; f.textContent = "+" + S.tap_power;
+  f.style.left = (e.clientX - 10) + "px"; f.style.top = (e.clientY - 20) + "px";
+  document.body.appendChild(f); setTimeout(() => f.remove(), 800); render();
+}
+$("coin").addEventListener("pointerdown", tap);
+
+// ارسال دسته‌ای ضربه‌ها هر ۱ ثانیه
+setInterval(async () => {
+  if (!pending) return;
+  const n = pending; pending = 0;
+  const r = await call("tap", {count: n});
+  if (r.user) { S = r.user; S.energy -= pending * S.tap_power; S.balance += pending * S.tap_power; last = Date.now(); render(); }
+}, 1000);
+
+$("up").onclick = async () => {
+  const r = await call("upgrade");
+  if (r.user) { S = r.user; render(); } else tg.showAlert("سکه‌ی کافی نداری!");
+};
+$("tp").onclick = async () => {
+  const box = $("top");
+  if (box.style.display === "block") { box.style.display = "none"; return; }
+  const r = await call("top");
+  box.innerHTML = (r.top || []).map((u, i) =>
+    `<div><span>${i + 1}. ${u.first_name || u.username || "—"}</span><b>${Number(u.balance).toLocaleString("fa-IR")}</b></div>`).join("");
+  box.style.display = "block";
+};
+$("inv").onclick = () => {
+  const link = `${BOT_APP_LINK}?startapp=ref_${S.tg_id}`;
+  tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent("بیا سکه جمع کنیم 🪙"));
+};
+
+(async () => {
+  const r = await call("sync");
+  if (r.user) { S = r.user; last = Date.now(); render(); } else $("sub").textContent = "خطا در ورود: " + (r.error || "");
+})();
+</script>
+</body>
+</html>
