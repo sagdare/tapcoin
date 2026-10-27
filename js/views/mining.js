@@ -13,37 +13,35 @@ import {
 
 let ticker = null;
 
-// تبدیل اعداد انگلیسی به فارسی
-const toFaDigits = (str) => {
-  return String(str).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
-};
+// تبدیل اعداد به فارسی
+const toFaDigits = (str) => String(str).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
-// فرمت‌دهی سرعت (TH/s)
+// سرعت: ۴ رقم اعشار
 const formatRate = (rate) => {
   const v = Number(rate) || 0;
-  if (v >= 1) return toFaDigits(v.toFixed(2));
-  if (v >= 0.001) return toFaDigits(v.toFixed(4));
   return toFaDigits(v.toFixed(4));
 };
 
-// ۸ رقم اعشار برای شمارنده وسط صفحه
-function formatCoins8(n) {
+// ماین و شمارنده: ۶ رقم اعشار
+function formatCoins6(n) {
   const v = Number(n) || 0;
   return toFaDigits(v.toFixed(6));
 }
 
-// ۱ رقم اعشار برای موجودی بالای صفحه و خروجی ۲۴ ساعته
+// موجودی و خروجی: ۱ رقم اعشار
 function formatCoins1(n) {
   const v = Number(n) || 0;
   return toFaDigits(v.toFixed(1));
 }
 
 function hashRateForLevel(level) {
-  return BASE_HASHRATE * Math.pow(LEVEL_RATE_MULTIPLIER, Math.max(0, level - 1));
+  const lv = Math.max(1, level || 1);
+  return BASE_HASHRATE * Math.pow(LEVEL_RATE_MULTIPLIER, lv - 1);
 }
 
 function currentDailyMined(s) {
-  const elapsed = Math.max(0, (Date.now() - new Date(s.last_collect).getTime()) / 1000);
+  const lastCollectTime = s.last_collect ? new Date(s.last_collect).getTime() : Date.now();
+  const elapsed = Math.max(0, (Date.now() - lastCollectTime) / 1000);
   const currentRate = hashRateForLevel(s.level);
   return (Number(s.daily_mined) || 0) + elapsed * currentRate;
 }
@@ -54,7 +52,7 @@ function remainingCap(s) {
 }
 
 function getRemainingTime(s) {
-  const last = new Date(s.last_collect).getTime();
+  const last = s.last_collect ? new Date(s.last_collect).getTime() : Date.now();
   const target = last + 24 * 60 * 60 * 1000;
   const diff = Math.max(0, target - Date.now());
   
@@ -74,6 +72,11 @@ export function renderMining() {
     return;
   }
 
+  // جلوگیری از صفر شدن لول
+  if (!s.level || s.level < 1) s.level = 1;
+  if (!s.last_collect) s.last_collect = new Date().toISOString();
+  if (s.balance === null || s.balance === undefined) s.balance = 0;
+
   const user = getTelegramUser();
   const photoUrl = user?.photo_url;
   
@@ -84,8 +87,6 @@ export function renderMining() {
   const rate = hashRateForLevel(s.level);
   const nextCost = upgradeCostForLevel(s.level);
   const canUpgrade = s.balance >= nextCost && s.level < MAX_LEVEL;
-  
-  // خروجی ۲۴ ساعته = سرعت در ۲۴ ساعت (۸۶۴۰۰ ثانیه)
   const dailyOutput = rate * 86400;
 
   root.innerHTML = `
@@ -126,7 +127,7 @@ export function renderMining() {
 
       <div class="reward-section">
         <div class="reward-label">پاداش برداشت‌نشده</div>
-        <div class="reward-value" id="live-pending" style="font-size: 26px; direction: ltr; display:flex; justify-content:center; align-items:baseline;">${formatCoins8(0)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span></div>
+        <div class="reward-value" id="live-pending" style="font-size: 26px; direction: ltr; display:flex; justify-content:center; align-items:baseline;">${formatCoins6(0)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span></div>
         <div class="reward-sub">
           <span>≈ $۰.۰۰۰۰</span> · <span id="live-rate">${formatRate(rate)} TH/s</span>
         </div>
@@ -195,18 +196,17 @@ function tick() {
   const rem = remainingCap(s);
   const live = Math.min(liveRaw, rem);
 
-  // شمارنده وسط با ۸ رقم اعشار
+  // شمارنده ۶ رقم اعشار
   const el = $('#live-pending');
-  if (el) el.innerHTML = `${formatCoins8(live)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span>`;
+  if (el) el.innerHTML = `${formatCoins6(live)}<span class="currency" style="font-size:16px; margin-left:6px;">MCH</span>`;
 
-  // دکمه با ۴ رقم اعشار
+  // دکمه هم ۶ رقم اعشار
   const btn = $('#collect-btn');
   if (btn && !btn.classList.contains('loading')) {
     btn.disabled = live < 0.00000001 || rem <= 0;
-    btn.textContent = `دریافت پاداش · ${toFaDigits(live.toFixed(4))} MCH`;
+    btn.textContent = `دریافت پاداش · ${formatCoins6(live)} MCH`;
   }
   
-  // تایمر
   const timer = $('#timer');
   if (timer) timer.textContent = getRemainingTime(s);
 }
@@ -236,7 +236,7 @@ async function collect() {
       d.state.last_collect = new Date().toISOString();
     });
     haptic('success');
-    toast(`+${formatCoins8(earned)} برداشت شد`, 'success');
+    toast(`+${formatCoins6(earned)} برداشت شد`, 'success');
     renderMining();
     btn.classList.remove('loading');
     return;
@@ -246,7 +246,7 @@ async function collect() {
     const r = await api('collect');
     if (r.success) {
       haptic('success');
-      toast(`+${formatCoins8(r.earned)} برداشت شد`, 'success');
+      toast(`+${formatCoins6(r.earned)} برداشت شد`, 'success');
       await syncData();
       renderMining();
     } else {

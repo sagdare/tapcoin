@@ -1,20 +1,20 @@
 export const FUNCTION_URL = 'https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram';
 
-// سرعت رو فعلا 0.0005 گذاشتم که عدد به چشم بیاد، بعدا میتونی 0.0001 کنی
-export const BASE_HASHRATE = 0.0005; 
-export const LEVEL_RATE_MULTIPLIER = 1.04; 
+// سرعت پایه (پایین و واقعی)
+export const BASE_HASHRATE = 0.0001; 
+export const LEVEL_RATE_MULTIPLIER = 1.05; 
 export const MAX_LEVEL = 100;
 
-// سقف روزانه
+// سقف روزانه (لول 1 = 10 MCH)
 export const dailyCapForLevel = (level) => {
   const lv = Math.max(1, Math.floor(level));
-  return Math.floor(100 + (lv - 1) * 50 + Math.pow(lv, 1.1));
+  return Math.floor(10 + (lv - 1) * 5 + Math.pow(lv, 1.2));
 };
 
 // هزینه ارتقا
 export const upgradeCostForLevel = (level) => {
   const lv = Math.max(1, Math.floor(level));
-  return Math.floor(500 * Math.pow(lv, 2.4));
+  return Math.floor(50 * Math.pow(lv, 2.2));
 };
 
 export const MINER_INFO = {
