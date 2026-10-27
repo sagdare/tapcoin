@@ -1,14 +1,16 @@
 import { store } from '../store.js';
 import { toast, $ } from '../ui.js';
-import { getTelegramUser, haptic, tg } from '../telegram.js';
+import { getTelegramUser, haptic } from '../telegram.js';
 
 export function renderFriends() {
   const root = $('#friends-root');
   const count = store.data?.friend_count || 0;
   const user = getTelegramUser();
   
-  // گرفتن نام کاربری ربات از خود تلگرام (درست کار میکند)
-  const botUsername = tg?.initDataUnsafe?.user?.username || 'mamecoinbot'; 
+  // اسم ربات شما
+  const botUsername = 'mamecoinbot'; 
+  
+  // ساخت لینک با startapp
   const refLink = user
     ? `https://t.me/${botUsername}?startapp=ref_${user.id}`
     : '—';
