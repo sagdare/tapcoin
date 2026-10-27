@@ -2,99 +2,239 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Tap Coin</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;800&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--card:#f1f1f4;--accent:#f5a623}
-@media (prefers-color-scheme:dark){:root{--bg:#111;--fg:#f2f2f2;--card:#1e1e22}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Tahoma,sans-serif;text-align:center;
- padding:env(safe-area-inset-top,0) 16px env(safe-area-inset-bottom,0)}
-#bal{font-size:44px;font-weight:800;margin:20px 0 4px}
-#sub{opacity:.6;font-size:14px}
-#coin{width:240px;height:240px;border-radius:50%;margin:28px auto;font-size:110px;line-height:240px;cursor:pointer;
- background:radial-gradient(circle at 35% 30%,#ffe08a,var(--accent));box-shadow:0 10px 40px #f5a62366;transition:transform .06s}
-#coin:active{transform:scale(.94)}
-.bar{height:12px;background:var(--card);border-radius:8px;overflow:hidden;margin:8px 0}
-#fill{height:100%;background:var(--accent);width:100%}
-.row{display:flex;gap:8px;margin-top:14px}
-button{flex:1;padding:12px;border:0;border-radius:12px;background:var(--card);color:var(--fg);font-size:15px;cursor:pointer}
-#top{display:none;text-align:right;margin-top:14px}
-#top div{padding:8px 12px;background:var(--card);border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between}
-.fl{position:fixed;font-weight:800;font-size:26px;color:var(--accent);pointer-events:none;animation:up .8s forwards}
-@keyframes up{to{transform:translateY(-90px);opacity:0}}
+:root{--bg:#0e0f14;--card:#1a1c25;--card2:#242736;--fg:#f4f4f8;--mut:#8b8fa3;--ac:#ffb631;--ac2:#ff8a1f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:Vazirmatn,system-ui,Tahoma,sans-serif;display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+main{flex:1;overflow-y:auto;padding:14px 16px 96px}
+.tab{display:none}.tab.on{display:block;animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#14151cf2;backdrop-filter:blur(12px);border-top:1px solid #ffffff12;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;background:none;border:0;color:var(--mut);font:inherit;font-size:11px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav button i{font-style:normal;font-size:22px}
+nav button.on{color:var(--ac)}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:12px}
+.sp{flex:1}
+.mut{color:var(--mut);font-size:13px}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:700;font-size:15px;color:#1a1200;background:linear-gradient(135deg,var(--ac),var(--ac2));cursor:pointer}
+.btn:disabled{opacity:.4}
+.btn.alt{background:var(--card2);color:var(--fg)}
+h2{margin:4px 0 14px;font-size:20px}
+/* tap tab */
+.me{display:flex;align-items:center;gap:10px}
+.av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2));display:grid;place-items:center;color:#1a1200;font-weight:800}
+.chip{font-size:12px;background:var(--card2);padding:4px 10px;border-radius:20px;color:var(--ac)}
+#bal{text-align:center;font-size:46px;font-weight:800;margin:18px 0 0;letter-spacing:-1px}
+#per{text-align:center;color:var(--mut);font-size:13px}
+#stage{display:grid;place-items:center;margin:22px 0;perspective:600px}
+#coin{width:250px;height:250px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+ background:radial-gradient(circle at 32% 28%,#ffe9a8,var(--ac) 55%,var(--ac2));
+ box-shadow:0 0 0 10px #ffb63122,0 0 0 22px #ffb6310f,0 18px 60px #ff8a1f55;transition:transform .12s}
+#coin span{width:76%;height:76%;border-radius:50%;border:6px solid #ffffff55;display:grid;place-items:center;font-size:96px;color:#fff;text-shadow:0 4px 10px #b8650033;font-weight:800}
+.en{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.bar{height:12px;background:var(--card2);border-radius:8px;overflow:hidden}
+#fill{height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac));width:100%;transition:width .2s}
+.fl{position:fixed;font-weight:800;font-size:28px;color:#fff;text-shadow:0 2px 8px #000a;pointer-events:none;animation:up .8s forwards;z-index:9}
+@keyframes up{to{transform:translateY(-100px);opacity:0}}
+/* lists */
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border-radius:14px;margin-bottom:8px}
+.rk{width:30px;text-align:center;font-weight:800;color:var(--mut)}
+.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.big{font-size:54px;text-align:center}
+.stat{flex:1;text-align:center;background:var(--card2);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:20px}
+#toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20}
+#toast.on{opacity:1}
 </style>
 </head>
 <body>
-<div id="bal">…</div><div id="sub">در حال اتصال</div>
-<div id="coin">🪙</div>
-<div id="en">⚡ 0 / 0</div><div class="bar"><div id="fill"></div></div>
-<div class="row"><button id="up">⬆️ ارتقا</button><button id="tp">🏆 برترین‌ها</button><button id="inv">👥 دعوت</button></div>
-<div id="top"></div>
+<main>
+  <!-- ۱. بازی -->
+  <section class="tab on" id="t-home">
+    <div class="row">
+      <div class="me"><div class="av" id="av">؟</div><div><div id="uname" style="font-weight:700">…</div><div class="mut" id="lvl"></div></div></div>
+      <div class="sp"></div><div class="chip" id="league">برنز</div>
+    </div>
+    <div id="bal">0</div><div id="per"></div>
+    <div id="stage"><div id="coin"><span>★</span></div></div>
+    <div class="card" style="margin:0">
+      <div class="en"><span>⚡ انرژی</span><b id="en">0 / 0</b></div>
+      <div class="bar"><div id="fill"></div></div>
+    </div>
+  </section>
+
+  <!-- ۲. ارتقا -->
+  <section class="tab" id="t-boost">
+    <h2>🚀 ارتقاها</h2>
+    <div class="card">
+      <div class="row"><div class="big" style="font-size:38px">👆</div><div class="sp"><b>قدرت ضربه</b><div class="mut" id="b-lvl"></div></div></div>
+      <p class="mut" id="b-desc" style="margin:12px 0"></p>
+      <button class="btn" id="up"></button>
+    </div>
+    <div class="card"><div class="row"><div style="font-size:30px">⚡</div><div class="sp"><b>ظرفیت انرژی</b><div class="mut">با هر ارتقای قدرت ضربه، ۲۵۰ واحد بیشتر میشه</div></div><b id="b-en"></b></div></div>
+    <div class="card"><div class="row"><div style="font-size:30px">🔋</div><div class="sp"><b>سرعت شارژ</b><div class="mut">هر ثانیه ۱ واحد انرژی برمی‌گرده</div></div></div></div>
+  </section>
+
+  <!-- ۳. دوستان -->
+  <section class="tab" id="t-friends">
+    <h2>👥 دوستان</h2>
+    <div class="card" style="text-align:center">
+      <div class="big">🎁</div>
+      <b>دوستات رو دعوت کن!</b>
+      <p class="mut">به ازای هر دوست، <b style="color:var(--ac)">۵,۰۰۰</b> سکه برای تو و <b style="color:var(--ac)">۲,۵۰۰</b> سکه برای اونه.</p>
+      <button class="btn" id="inv">📨 ارسال دعوت</button>
+      <button class="btn alt" id="cp" style="margin-top:8px">🔗 کپی لینک</button>
+    </div>
+    <div class="row" style="margin-bottom:12px"><div class="stat"><b id="f-n">0</b><span class="mut">دوست دعوت‌شده</span></div><div class="stat"><b id="f-c">0</b><span class="mut">سکه‌ی پاداش</span></div></div>
+    <div id="f-list"></div>
+  </section>
+
+  <!-- ۴. برترین‌ها -->
+  <section class="tab" id="t-top">
+    <h2>🏆 برترین‌ها</h2>
+    <div id="top-list"><div class="mut" style="text-align:center">در حال بارگذاری…</div></div>
+  </section>
+</main>
+
+<nav>
+  <button data-t="home" class="on"><i>🪙</i>بازی</button>
+  <button data-t="boost"><i>🚀</i>ارتقا</button>
+  <button data-t="friends"><i>👥</i>دوستان</button>
+  <button data-t="top"><i>🏆</i>برترین‌ها</button>
+</nav>
+<div id="toast"></div>
+
 <script>
-// ⚠️ این دو مقدار را بعد از ساخت پروژه تغییر بده
+// ⚠️ این دو مقدار را با مقادیر خودت عوض کن
 const API = "https://rsxroqhfzzuyysjrlczl.supabase.co/functions/v1/api";
-const BOT_APP_LINK = "https://t.me/mamecoinbot/app"; // لینک Direct Link میني‌اپ
+const BOT_APP_LINK = "https://t.me/mamecoinbot/app";
 
-const tg = Telegram.WebApp; tg.ready(); tg.expand();
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+try { tg.setHeaderColor("#0e0f14"); tg.setBackgroundColor("#0e0f14"); tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {}
+
 const $ = id => document.getElementById(id);
-let S = null, pending = 0, last = Date.now();
+const fmt = n => Math.floor(n).toLocaleString("en-US");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let S = null, pending = 0, busy = false, last = Date.now();
 
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); setTimeout(() => el.classList.remove("on"), 2200); }
 async function call(action, data = {}) {
-  const r = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({initData: tg.initData, action, ...data})});
-  return r.json();
+  try {
+    const r = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({initData: tg.initData, action, ...data})});
+    return await r.json();
+  } catch (e) { return {error: "network"}; }
 }
+const LEAGUES = [[0,"🥉 برنز"],[5000,"🥈 نقره"],[50000,"🥇 طلا"],[500000,"💎 الماس"]];
+const league = b => LEAGUES.filter(l => b >= l[0]).pop()[1];
+
+// ---------- رندر ----------
 function render() {
   if (!S) return;
-  $("bal").textContent = "🪙 " + Math.floor(S.balance).toLocaleString("fa-IR");
-  $("sub").textContent = "قدرت هر ضربه: " + S.tap_power;
-  $("en").textContent = `⚡ ${Math.floor(S.energy)} / ${S.max_energy}`;
-  $("fill").style.width = (S.energy / S.max_energy * 100) + "%";
-  $("up").textContent = "⬆️ ارتقا (" + S.upgrade_cost.toLocaleString("fa-IR") + ")";
+  $("bal").textContent = fmt(S.balance);
+  $("per").textContent = "+" + S.tap_power + " به ازای هر ضربه";
+  $("en").textContent = fmt(S.energy) + " / " + fmt(S.max_energy);
+  $("fill").style.width = Math.min(100, S.energy / S.max_energy * 100) + "%";
+  $("league").textContent = league(S.balance);
+  $("lvl").textContent = "سطح " + S.tap_power;
+  $("b-lvl").textContent = "سطح " + S.tap_power;
+  $("b-desc").textContent = `هر ضربه از ${S.tap_power} به ${S.tap_power + 1} سکه می‌رسه و ظرفیت انرژی ۲۵۰ تا بیشتر میشه.`;
+  $("up").textContent = "ارتقا — " + fmt(S.upgrade_cost) + " 🪙";
+  $("up").disabled = S.balance < S.upgrade_cost;
+  $("b-en").textContent = fmt(S.max_energy);
 }
-// بازیابی انرژی سمت کلاینت (فقط ظاهری، سرور مرجع است)
-setInterval(() => { if (!S) return; const n = Date.now(); S.energy = Math.min(S.max_energy, S.energy + (n - last) / 1000); last = n; render(); }, 250);
+const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+$("uname").textContent = u ? (u.first_name || u.username || "بازیکن") : "بازیکن";
+$("av").textContent = u ? (u.first_name || "؟").charAt(0) : "؟";
 
+// شارژ ظاهری انرژی (مرجع اصلی سرور است)
+setInterval(() => {
+  if (!S) return;
+  const n = Date.now(); S.energy = Math.min(S.max_energy, S.energy + (n - last) / 1000); last = n; render();
+}, 500);
+
+// ---------- ضربه ----------
+const coin = $("coin");
 function tap(e) {
-  if (!S || S.energy < S.tap_power) return;
+  if (!S) return;
+  const r = coin.getBoundingClientRect();
+  const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+  coin.style.transform = `rotateX(${-dy * 14}deg) rotateY(${dx * 14}deg) scale(.96)`;
+  if (S.energy < S.tap_power) { toast("انرژی تموم شده ⚡"); return; }
   S.energy -= S.tap_power; S.balance += S.tap_power; pending++;
-  tg.HapticFeedback && tg.HapticFeedback.impactOccurred("light");
+  try { tg.HapticFeedback.impactOccurred("light"); } catch (x) {}
   const f = document.createElement("div"); f.className = "fl"; f.textContent = "+" + S.tap_power;
-  f.style.left = (e.clientX - 10) + "px"; f.style.top = (e.clientY - 20) + "px";
-  document.body.appendChild(f); setTimeout(() => f.remove(), 800); render();
+  f.style.left = (e.clientX - 12) + "px"; f.style.top = (e.clientY - 30) + "px";
+  document.body.appendChild(f); setTimeout(() => f.remove(), 800);
+  render();
 }
-$("coin").addEventListener("pointerdown", tap);
+coin.addEventListener("pointerdown", tap);
+["pointerup", "pointerleave", "pointercancel"].forEach(ev => coin.addEventListener(ev, () => coin.style.transform = ""));
 
-// ارسال دسته‌ای ضربه‌ها هر ۱ ثانیه
-setInterval(async () => {
-  if (!pending) return;
-  const n = pending; pending = 0;
+// ارسال دسته‌ای ضربه‌ها
+async function flush() {
+  if (busy || !pending) return;
+  busy = true; const n = pending; pending = 0;
   const r = await call("tap", {count: n});
-  if (r.user) { S = r.user; S.energy -= pending * S.tap_power; S.balance += pending * S.tap_power; last = Date.now(); render(); }
-}, 1000);
+  if (r.user) {
+    S = r.user;
+    S.balance += pending * S.tap_power; S.energy -= pending * S.tap_power; // ضربه‌های حین درخواست
+    last = Date.now(); render();
+  } else { pending += n; if (r.error === "unauthorized") toast("لطفاً بازی را از داخل تلگرام باز کن"); }
+  busy = false;
+}
+setInterval(flush, 1000);
 
+// ---------- ارتقا ----------
 $("up").onclick = async () => {
+  await flush();
   const r = await call("upgrade");
-  if (r.user) { S = r.user; render(); } else tg.showAlert("سکه‌ی کافی نداری!");
-};
-$("tp").onclick = async () => {
-  const box = $("top");
-  if (box.style.display === "block") { box.style.display = "none"; return; }
-  const r = await call("top");
-  box.innerHTML = (r.top || []).map((u, i) =>
-    `<div><span>${i + 1}. ${u.first_name || u.username || "—"}</span><b>${Number(u.balance).toLocaleString("fa-IR")}</b></div>`).join("");
-  box.style.display = "block";
-};
-$("inv").onclick = () => {
-  const link = `${BOT_APP_LINK}?startapp=ref_${S.tg_id}`;
-  tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent("بیا سکه جمع کنیم 🪙"));
+  if (r.user) { S = r.user; last = Date.now(); render(); toast("ارتقا انجام شد ✅"); try { tg.HapticFeedback.notificationOccurred("success"); } catch (x) {} }
+  else toast(r.error === "not_enough" ? "سکه‌ی کافی نداری" : "خطا، دوباره تلاش کن");
 };
 
+// ---------- دوستان ----------
+const link = () => `${BOT_APP_LINK}?startapp=ref_${S.tg_id}`;
+$("inv").onclick = () => tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link()) + "&text=" + encodeURIComponent("بیا با هم سکه جمع کنیم 🪙"));
+$("cp").onclick = async () => { try { await navigator.clipboard.writeText(link()); toast("لینک کپی شد ✅"); } catch (e) { toast(link()); } };
+async function loadFriends() {
+  const r = await call("friends");
+  if (!r.friends) { $("f-list").innerHTML = '<div class="mut" style="text-align:center">فعلاً امکان نمایش نیست</div>'; return; }
+  $("f-n").textContent = r.count || 0; $("f-c").textContent = fmt((r.count || 0) * 5000);
+  $("f-list").innerHTML = r.friends.length ? r.friends.map(f =>
+    `<div class="item"><div class="av" style="width:34px;height:34px">${esc((f.first_name || "؟").charAt(0))}</div><div class="nm">${esc(f.first_name || f.username || "—")}</div><b>${fmt(f.balance)}</b></div>`).join("")
+    : '<div class="mut" style="text-align:center">هنوز کسی رو دعوت نکردی</div>';
+}
+
+// ---------- برترین‌ها ----------
+async function loadTop() {
+  const r = await call("top");
+  const m = ["🥇", "🥈", "🥉"];
+  $("top-list").innerHTML = (r.top || []).map((x, i) =>
+    `<div class="item"><div class="rk">${m[i] || i + 1}</div><div class="nm">${esc(x.first_name || x.username || "—")}</div><b>${fmt(x.balance)} 🪙</b></div>`).join("") || '<div class="mut" style="text-align:center">خالی</div>';
+}
+
+// ---------- تب‌ها ----------
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.id === "t-" + b.dataset.t));
+  try { tg.HapticFeedback.selectionChanged(); } catch (x) {}
+  if (b.dataset.t === "friends") loadFriends();
+  if (b.dataset.t === "top") loadTop();
+});
+
+// ---------- شروع ----------
 (async () => {
   const r = await call("sync");
-  if (r.user) { S = r.user; last = Date.now(); render(); } else $("sub").textContent = "خطا در ورود: " + (r.error || "");
+  if (r.user) { S = r.user; last = Date.now(); render(); }
+  else toast("خطا در ورود: " + (r.error || "نامشخص"));
 })();
 </script>
 </body>
