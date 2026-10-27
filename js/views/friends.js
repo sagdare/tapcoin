@@ -1,13 +1,16 @@
 import { store } from '../store.js';
 import { toast, $ } from '../ui.js';
-import { getTelegramUser, haptic } from '../telegram.js';
+import { getTelegramUser, haptic, tg } from '../telegram.js';
 
 export function renderFriends() {
   const root = $('#friends-root');
   const count = store.data?.friend_count || 0;
   const user = getTelegramUser();
+  
+  // گرفتن نام کاربری ربات از خود تلگرام (درست کار میکند)
+  const botUsername = tg?.initDataUnsafe?.user?.username || 'mamecoinbot'; 
   const refLink = user
-    ? `https://t.me/${window.TELEGRAM_BOT_USERNAME || 'mamecoinbot'}?start=ref_${user.id}`
+    ? `https://t.me/${botUsername}?startapp=ref_${user.id}`
     : '—';
 
   root.innerHTML = `
@@ -27,7 +30,7 @@ export function renderFriends() {
       </div>
 
       <div class="referral-box">
-        <code id="ref-link">${refLink}</code>
+        <code id="ref-link" style="direction: ltr; text-align: left;">${refLink}</code>
         <button class="btn btn-sm" id="copy-ref">کپی</button>
       </div>
 
