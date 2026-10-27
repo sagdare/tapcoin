@@ -11,8 +11,16 @@ export function renderFriends() {
     : '—';
 
   root.innerHTML = `
-    <div class="card">
-      <div class="card-title">👥 دوستان</div>
+    <div class="glass-card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9.5" cy="7" r="3.7"/>
+          <path d="M16.5 21v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.2A3.7 3.7 0 0 0 2.5 19.2V21"/>
+          <path d="M21.5 21v-1.8a3.7 3.7 0 0 0-2.8-3.6"/>
+          <path d="M15.5 3.6a3.7 3.7 0 0 1 0 7.2"/>
+        </svg>
+        دوستان
+      </div>
       <div class="friends-hero">
         <div class="friends-count">${count}</div>
         <div class="friends-label">دوست دعوت شده</div>
@@ -41,7 +49,7 @@ export function renderFriends() {
   };
 
   $('#share-ref').onclick = () => {
-    const text = 'بیا با هم ماین کنیم! ⛏️';
+    const text = 'بیا با هم ماین کنیم!';
     window.Telegram.WebApp.openTelegramLink(
       `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`
     );

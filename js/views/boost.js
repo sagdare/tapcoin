@@ -5,12 +5,18 @@ import { fa, toast, $ } from '../ui.js';
 import { haptic } from '../telegram.js';
 import { MINER_INFO } from '../config.js';
 
+const MINER_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="4" y="6" width="16" height="12" rx="2"/>
+  <path d="M8 10h2M14 10h2M8 14h8"/>
+  <circle cx="18" cy="18" r="2.5"/>
+</svg>`;
+
 export function renderBoost() {
   const root = $('#boost-root');
   const s = store.data?.state;
 
   if (!s) {
-    root.innerHTML = '<div class="card"><div class="skeleton"></div><div class="skeleton"></div></div>';
+    root.innerHTML = '<div class="glass-card"><div class="skeleton"></div><div class="skeleton"></div></div>';
     return;
   }
 
@@ -26,11 +32,11 @@ export function renderBoost() {
 
     rows += `
       <div class="miner-card">
-        <div class="miner-icon ${type}">${info.icon}</div>
+        <div class="miner-icon ${type}">${MINER_SVG}</div>
         <div class="miner-info">
           <div class="miner-name">${info.name}</div>
           <div class="miner-rate">
-            ${m ? `سطح ${m.level} • +${fa(info.rate * m.level)}/s` : `+${fa(info.rate)}/s`}
+            ${m ? `سطح ${m.level} • +${info.rate * m.level} TH/s` : `+${info.rate} TH/s`}
           </div>
         </div>
         <div class="miner-actions">
@@ -50,8 +56,13 @@ export function renderBoost() {
   }
 
   root.innerHTML = `
-    <div class="card">
-      <div class="card-title">⚡ ارتقای ماینرها</div>
+    <div class="glass-card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2 4.5 13.2a.8.8 0 0 0 .6 1.3H11l-1 7.5 8.5-10.7a.8.8 0 0 0-.6-1.3H13l1-7.5z"/>
+        </svg>
+        ارتقای ماینرها
+      </div>
       <div style="font-size:12px;color:var(--hint);margin-bottom:12px">
         موجودی: <b style="color:var(--accent-2)">${fa(balance)}</b>
       </div>
@@ -73,7 +84,7 @@ async function handleAction(action, minerType, btn) {
     const r = await api(action === 'buy' ? 'buy_miner' : 'upgrade_miner', { minerType });
     if (r.success) {
       haptic('success');
-      toast(action === 'buy' ? 'ماینر خریده شد ✅' : 'ارتقا موفق ✅', 'success');
+      toast(action === 'buy' ? 'ماینر خریده شد' : 'ارتقا موفق', 'success');
       await syncData();
       renderBoost();
     } else {
