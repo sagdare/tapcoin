@@ -20,16 +20,20 @@
       --danger: #ef4444;
       --warning: #f59e0b;
       --radius: 18px;
+
+      /* fallback — با JS overwrite میشن */
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --app-height:  100dvh;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; }
+    html { height: 100%; }
     body {
       font-family: -apple-system, "Segoe UI", "Vazirmatn", Tahoma, system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
-      min-height: 100vh;
-      overflow-x: hidden;
+      min-height: var(--app-height);
+      padding: 16px 16px calc(86px + var(--safe-bottom));
       line-height: 1.5;
     }
     body::before {
@@ -162,7 +166,7 @@
     .badge-success { background: rgba(34,197,94,0.15); color: var(--success); }
     .badge-owned { background: rgba(0,224,255,0.12); color: var(--accent-2); }
 
-    /* ---------- Empty / loading ---------- */
+    /* ---------- Skeleton ---------- */
     .skeleton {
       background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.10) 37%, rgba(255,255,255,0.05) 63%);
       background-size: 400% 100%;
@@ -172,16 +176,21 @@
     }
     @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
-    /* ---------- Bottom Nav ---------- */
+    /* ---------- Bottom Nav (fullscreen-safe) ---------- */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      display: flex; justify-content: space-around;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
       background: rgba(20,20,30,0.92);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
-      padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+      padding: 6px 4px calc(6px + var(--safe-bottom));
       z-index: 100;
+      transform: translateZ(0);
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -198,7 +207,7 @@
 
     /* ---------- Toast ---------- */
     .toast-container {
-      position: fixed; top: 16px; left: 16px; right: 16px;
+      position: fixed; top: calc(16px + var(--safe-top)); left: 16px; right: 16px;
       display: flex; flex-direction: column; gap: 8px;
       z-index: 1000; pointer-events: none;
     }
@@ -216,18 +225,6 @@
     .toast.show { transform: none; opacity: 1; }
     .toast-success { border-color: rgba(34,197,94,0.4); }
     .toast-error { border-color: rgba(239,68,68,0.4); }
-
-    /* ---------- Progress bar ---------- */
-    .progress {
-      width: 100%; height: 4px; border-radius: 4px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden; margin-top: 8px;
-    }
-    .progress-fill {
-      height: 100%; border-radius: 4px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      transition: width .4s ease;
-    }
 
     /* ---------- Invite link ---------- */
     .invite-link {
@@ -255,9 +252,6 @@
       font-size: 20px; font-weight: 800; color: #fff;
       flex-shrink: 0;
     }
-
-    .fade { transition: opacity .2s; }
-    .fade.out { opacity: 0; }
   </style>
 </head>
 <body>
@@ -389,14 +383,37 @@
     tg.setHeaderColor?.('#0a0a12');
     tg.setBackgroundColor?.('#0a0a12');
 
+    // ---------- Layout: اعمال inset های تلگرام (fullscreen-safe) ----------
+    function applyLayout() {
+      const root = document.documentElement;
+      const sa  = tg.safeAreaInset        || {};
+      const csa = tg.contentSafeAreaInset || {};
+
+      const bottom = (sa.bottom || 0) + (csa.bottom || 0);
+      const top    = (sa.top    || 0) + (csa.top    || 0);
+
+      root.style.setProperty('--safe-bottom', `${bottom}px`);
+      root.style.setProperty('--safe-top',    `${top}px`);
+
+      if (tg.viewportStableHeight > 0) {
+        root.style.setProperty('--app-height', `${tg.viewportStableHeight}px`);
+      }
+    }
+    ['viewportChanged','safeAreaChanged','contentSafeAreaChanged','fullscreenChanged']
+      .forEach(evt => { try { tg.onEvent(evt, applyLayout); } catch {} });
+    applyLayout();
+    setTimeout(applyLayout, 150);
+    setTimeout(applyLayout, 500);
+
+    // ---------- Config ----------
     const FUNCTION_URL = 'https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram';
     const BOT_USERNAME = 'mamecoinbot';
     const initData = tg.initData;
 
     // ---------- State ----------
-    let appData = null;         // پاسخ کامل سرور
-    let pendingBase = 0;        // مقدار pending در لحظه سینک
-    let pendingSyncAt = 0;      // timestamp سینک
+    let appData = null;
+    let pendingBase = 0;
+    let pendingSyncAt = 0;
     let pendingTimer = null;
     let syncTimer = null;
     let currentTab = 'mining';
@@ -467,7 +484,7 @@
     }
 
     // ---------- Sync ----------
-    async function syncData(showSkeleton = false) {
+    async function syncData() {
       try {
         const data = await api('get');
         if (!data.success) {
@@ -538,7 +555,7 @@
     }
 
     // ---------- Render: Miners ----------
-    async function renderMiners() {
+    function renderMiners() {
       const names  = { basic: 'پایه', advanced: 'پیشرفته', pro: 'حرفه‌ای' };
       const prices = { basic: 100, advanced: 500, pro: 2000 };
       let html = '';
@@ -595,9 +612,9 @@
 
     // ---------- Render: Tasks ----------
     const TASKS = [
-      { id: 'join_channel', title: 'عضویت در کانال',    reward: 500  },
-      { id: 'invite_3',     title: 'دعوت از ۳ دوست',    reward: 1000 },
-      { id: 'daily_login',  title: 'ورود روزانه',        reward: 100  },
+      { id: 'join_channel', title: 'عضویت در کانال', reward: 500  },
+      { id: 'invite_3',     title: 'دعوت از ۳ دوست', reward: 1000 },
+      { id: 'daily_login',  title: 'ورود روزانه',    reward: 100  },
     ];
 
     function renderTasks() {
@@ -632,7 +649,6 @@
         } else {
           haptic('error');
           toast(r.error || 'قبلاً دریافت شده', 'error');
-          // اگه سرور گفته قبلاً دریافت شده، لوکال هم مارک کن
           if (/already|قبلاً/i.test(r.error || '')) { markClaimed(taskId); renderTasks(); }
         }
       } catch { haptic('error'); toast('خطا', 'error'); }
@@ -679,13 +695,11 @@
 
     // ---------- Init ----------
     (async function init() {
-      await syncData(true);
+      await syncData();
       startPendingTicker();
-      // رفرش پس‌زمینه هر ۳۰ ثانیه — بدون فلیکر
       syncTimer = setInterval(() => syncData(), 30000);
-      // رفرش وقتی کاربر به اپ برمی‌گرده
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) syncData();
+        if (!document.hidden) { applyLayout(); syncData(); }
       });
     })();
   </script>
