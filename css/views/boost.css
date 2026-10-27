@@ -1,0 +1,21 @@
+.miner-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.miner-card:last-child { border-bottom: none; }
+.miner-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 22px;
+  background: rgba(124,92,255,0.15);
+  flex-shrink: 0;
+}
+.miner-icon.advanced { background: rgba(0,224,255,0.15); }
+.miner-icon.pro { background: rgba(245,158,11,0.15); }
+.miner-info { flex: 1; min-width: 0; }
+.miner-name { font-size: 14px; font-weight: 600; }
+.miner-rate { font-size: 11px; color: var(--hint); margin-top: 2px; }
+.miner-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.miner-price { font-size: 12px; font-weight: 700; text-align: center; color: var(--warning); }

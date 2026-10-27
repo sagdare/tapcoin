@@ -1,0 +1,49 @@
+:root {
+  --bg: var(--tg-theme-bg-color, #0a0a12);
+  --card: #16161f;
+  --card-2: #1e1e2b;
+  --text: var(--tg-theme-text-color, #ffffff);
+  --hint: rgba(255,255,255,0.55);
+  --border: rgba(255,255,255,0.08);
+  --accent: #7c5cff;
+  --accent-2: #00e0ff;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 18px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --app-height: 100dvh;
+  --tabbar-space: 88px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  font-family: -apple-system, "Segoe UI", "Vazirmatn", Tahoma, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: var(--app-height);
+  line-height: 1.5;
+  overflow-x: hidden;
+  padding-top: calc(16px + var(--safe-top));
+  padding-bottom: calc(var(--tabbar-space) + var(--safe-bottom));
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: -30% -20% 40% -20%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(124,92,255,0.28), transparent 60%);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+input, button, select { font-family: inherit; }

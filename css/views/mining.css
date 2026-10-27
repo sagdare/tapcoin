@@ -1,0 +1,37 @@
+.balance-wrap { text-align: center; padding: 8px 0 4px; }
+.balance-label {
+  font-size: 12px; color: var(--hint); letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.balance {
+  font-size: 42px; font-weight: 800; line-height: 1.15;
+  background: linear-gradient(135deg, #fff 0%, #b9a8ff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 6px 0 4px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+.balance-sub {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--warning); font-weight: 600;
+  background: rgba(245,158,11,0.1); padding: 4px 10px; border-radius: 20px;
+}
+.balance-sub .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--warning);
+  animation: pulseDot 1.6s ease-in-out infinite;
+}
+@keyframes pulseDot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.3); } }
+
+.pending-box {
+  margin-top: 18px; padding: 14px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.pending-box .label { font-size: 12px; color: var(--hint); }
+.pending-box .value {
+  font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--accent-2);
+}
