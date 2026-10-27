@@ -1,15 +1,14 @@
 export const FUNCTION_URL = 'https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram';
 
-// تنظیمات پایه ماینر
-export const BASE_HASHRATE = 0.0001; 
-export const LEVEL_RATE_MULTIPLIER = 1.04; // ضریب ملایم برای اینکه به لول ۴۶ برسه
+// سرعت رو فعلا 0.0005 گذاشتم که عدد به چشم بیاد، بعدا میتونی 0.0001 کنی
+export const BASE_HASHRATE = 0.0005; 
+export const LEVEL_RATE_MULTIPLIER = 1.04; 
 export const MAX_LEVEL = 100;
 
-// سقف روزانه (واحد MRG) بر اساس لول
+// سقف روزانه
 export const dailyCapForLevel = (level) => {
   const lv = Math.max(1, Math.floor(level));
-  // فرمول تقریبی برای رسیدن به عدد ۴۶ در لول ۴۶
-  return Math.floor(8 + (lv - 1) * 0.8 + Math.pow(lv, 1.1));
+  return Math.floor(100 + (lv - 1) * 50 + Math.pow(lv, 1.1));
 };
 
 // هزینه ارتقا

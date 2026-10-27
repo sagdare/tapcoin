@@ -2,7 +2,7 @@ import { store } from '../store.js';
 import { syncData, updateLocal } from '../state.js';
 import { api } from '../api.js';
 import { fa, toast, $ } from '../ui.js';
-import { haptic } from '../telegram.js';
+import { haptic, getTelegramUser } from '../telegram.js'; // اضافه شد برای عکس پروفایل
 import {
   BASE_HASHRATE,
   LEVEL_RATE_MULTIPLIER,
@@ -13,7 +13,7 @@ import {
 
 let ticker = null;
 
-// فرمت‌دهی سرعت (TH/s)
+// فرمت‌دهی سرعت
 const formatRate = (rate) => {
   const v = Number(rate) || 0;
   if (v >= 1) return v.toFixed(2);
@@ -21,10 +21,9 @@ const formatRate = (rate) => {
   return v.toFixed(6);
 };
 
-// فرمت‌دهی کوین‌ها (دقیقاً 6 رقم اعشار، حتی برای اعداد خیلی ریز)
+// فرمت‌دهی کوین‌ها (دقیقاً 6 رقم اعشار)
 function formatCoins(n) {
   const v = Number(n) || 0;
-  // با toFixed(6) همیشه ۶ رقم اعشار نمایش داده میشه
   return v.toFixed(6);
 }
 
@@ -36,16 +35,18 @@ function hashRateForLevel(level) {
 // محاسبه کل ماین شده در 24 ساعت اخیر
 function currentDailyMined(s) {
   const elapsed = Math.max(0, (Date.now() - new Date(s.last_collect).getTime()) / 1000);
-  return (Number(s.daily_mined) || 0) + elapsed * (Number(s.mining_rate) || 0);
+  // استفاده از سرعتِ محاسبه‌شده از روی لول، نه دیتابیس
+  const currentRate = hashRateForLevel(s.level);
+  return (Number(s.daily_mined) || 0) + elapsed * currentRate;
 }
 
-// ظرفیت باقی‌مانده تا سقف روزانه
+// ظرفیت باقی‌مانده
 function remainingCap(s) {
   const cap = dailyCapForLevel(s.level);
   return Math.max(0, cap - currentDailyMined(s));
 }
 
-// ساخت تایمر 24 ساعته (فارسی + اعداد فارسی)
+// تایمر
 function getRemainingTime(s) {
   const last = new Date(s.last_collect).getTime();
   const target = last + 24 * 60 * 60 * 1000;
@@ -55,11 +56,7 @@ function getRemainingTime(s) {
   const m = Math.floor((diff / (1000 * 60)) % 60);
   const sec = Math.floor((diff / 1000) % 60);
   
-  const hh = h.toString().padStart(2, '0');
-  const mm = m.toString().padStart(2, '0');
-  const ss = sec.toString().padStart(2, '0');
-  
-  return fa(`${hh}:${mm}:${ss}`);
+  return fa(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`);
 }
 
 export function renderMining() {
@@ -71,17 +68,26 @@ export function renderMining() {
     return;
   }
 
+  // گرفتن اطلاعات کاربر از تلگرام
+  const user = getTelegramUser();
+  const photoUrl = user?.photo_url;
+  
+  // اگر کاربر عکس داشت، عکس رو نشون بده، وگرنه آیکون پیش‌فرض
+  const avatarHtml = photoUrl 
+    ? `<img src="${photoUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+
   const rate = hashRateForLevel(s.level);
   const cap = dailyCapForLevel(s.level);
   const nextCost = upgradeCostForLevel(s.level);
   const canUpgrade = s.balance >= nextCost && s.level < MAX_LEVEL;
 
   root.innerHTML = `
-    <!-- هدر بالا -->
     <div class="top-header">
       <div class="user-info">
+        <!-- عکس پروفایل تلگرام -->
         <div class="avatar-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          ${avatarHtml}
         </div>
         <div class="balance-pill">
           <img src="img/coin.png" class="mini-coin" alt="coin" onerror="this.style.display='none'"/>
@@ -95,7 +101,6 @@ export function renderMining() {
       </div>
     </div>
 
-    <!-- کارت اصلی ماینینگ -->
     <div class="main-mining-card">
       <div class="mining-header">
         <div>
@@ -105,15 +110,15 @@ export function renderMining() {
         <div class="timer-pill" id="timer">${getRemainingTime(s)}</div>
       </div>
 
-      <!-- فن چرخان -->
       <div class="coin-container">
         <div class="coin-ring"></div>
-        <div class="fan-spin" id="fan-spin">
-          <img src="img/gpu-fan.png" alt="Fan" onerror="this.style.display='none'"/>
+        <div class="fan-wrapper">
+          <div class="fan-spin" id="fan-spin">
+            <img src="img/gpu-fan.png" alt="Fan" onerror="this.style.display='none'"/>
+          </div>
         </div>
       </div>
 
-      <!-- بخش ریوارد -->
       <div class="reward-section">
         <div class="reward-label">پاداش برداشت‌نشده</div>
         <div class="reward-value" id="live-pending">${fa(formatCoins(0))}<span class="currency">MCH</span></div>
@@ -125,7 +130,6 @@ export function renderMining() {
       <button class="btn-claim" id="collect-btn">دریافت پاداش · ۰.۰۰ MCH</button>
     </div>
 
-    <!-- لیست ماینر -->
     <div class="list-section">
       <div class="list-title">ماینر</div>
       
@@ -172,7 +176,7 @@ export function renderMining() {
 
 function startTicker() {
   if (ticker) clearInterval(ticker);
-  ticker = setInterval(tick, 300);
+  ticker = setInterval(tick, 200); // سرعت آپدیت رو کمی بیشتر کردم که بهتر ببینی
   tick();
 }
 
@@ -180,23 +184,22 @@ function tick() {
   const s = store.data?.state;
   if (!s) return;
   
+  // محاسبه زنده
   const elapsed = (Date.now() - store.pendingAt) / 1000;
-  const liveRaw = store.pendingBase + elapsed * (s.mining_rate || 0);
+  const liveRate = hashRateForLevel(s.level); // سرعت بر اساس لول
+  const liveRaw = store.pendingBase + elapsed * liveRate; 
   const rem = remainingCap(s);
   const live = Math.min(liveRaw, rem);
 
-  // اپدیت کوین
   const el = $('#live-pending');
   if (el) el.innerHTML = `${fa(formatCoins(live))}<span class="currency">MCH</span>`;
 
-  // اپدیت دکمه
   const btn = $('#collect-btn');
   if (btn && !btn.classList.contains('loading')) {
     btn.disabled = live < 0.000001 || rem <= 0;
     btn.textContent = `دریافت پاداش · ${fa(formatCoins(live))} MCH`;
   }
   
-  // اپدیت تایمر
   const timer = $('#timer');
   if (timer) timer.textContent = getRemainingTime(s);
 }
@@ -210,10 +213,9 @@ async function collect() {
   const s = store.data?.state;
   const isLocal = store.data?.local;
 
-  // حالت لوکال
   if (isLocal) {
     const elapsed = (Date.now() - new Date(s.last_collect).getTime()) / 1000;
-    const earned = Math.min(elapsed * s.mining_rate, remainingCap(s));
+    const earned = Math.min(elapsed * hashRateForLevel(s.level), remainingCap(s));
     if (earned <= 0) {
       haptic('error');
       toast('چیزی برای برداشت نیست', 'error');
@@ -233,7 +235,6 @@ async function collect() {
     return;
   }
 
-  // حالت آنلاین
   try {
     const r = await api('collect');
     if (r.success) {
@@ -274,12 +275,11 @@ async function upgrade() {
 
   haptic('medium');
 
-  // حالت لوکال
   if (isLocal) {
     updateLocal(d => {
       d.state.balance -= cost;
       d.state.level += 1;
-      d.state.mining_rate = hashRateForLevel(d.state.level);
+      // نیازی به ست کردن rate نیست چون خودش محاسبه میشه
     });
     haptic('success');
     toast(`سطح ${fa(s.level + 1)} ✅`, 'success');
@@ -287,7 +287,6 @@ async function upgrade() {
     return;
   }
 
-  // حالت آنلاین
   btn.style.opacity = '0.5';
   try {
     const r = await api('upgrade_miner', { minerType: 'basic' });
