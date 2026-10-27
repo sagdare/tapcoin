@@ -5,12 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>MineChill</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background: var(--tg-theme-bg-color, #0f0f1a);
+      color: var(--tg-theme-text-color, #fff);
+      padding: 16px 16px 80px;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #1e1e2e);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .balance { font-size: 32px; font-weight: 800; }
+    .label { font-size: 12px; opacity: 0.6; }
+    .rate { color: #f59e0b; font-weight: 600; }
+    .btn {
+      background: #2ea6ff; color: #fff; border: none;
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; width: 100%; margin-top: 12px;
+    }
+    .btn:disabled { opacity: 0.4; }
+    .btn-small { width: auto; padding: 8px 16px; margin-top: 0; }
+
+    .row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(128,128,128,0.15);
+    }
+    .row:last-child { border-bottom: none; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-around;
+      background: var(--tg-theme-secondary-bg-color, #1e1e2e);
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(128,128,128,0.15);
+      z-index: 100;
+    }
+    .nav-item {
+      font-size: 13px; opacity: 0.5; cursor: pointer;
+      padding: 4px 12px; text-align: center;
+    }
+    .nav-item.active { opacity: 1; color: #2ea6ff; font-weight: 600; }
+  </style>
 </head>
 <body>
 
-  <div id="tab-container"></div>
+  <!-- ========== تب ۱: ماین ========== -->
+  <div id="tab-mining" class="tab-content active">
+    <div class="card">
+      <div class="label">موجودی</div>
+      <div class="balance" id="balance">0</div>
+      <div class="label" style="margin-top:8px;">سرعت ماین: <span class="rate" id="mining-rate">1</span> سکه/ثانیه</div>
+      <div class="label" style="margin-top:4px;">قابل برداشت: <span id="pending">0</span></div>
+      <button class="btn" id="collect-btn">برداشت</button>
+    </div>
+    <div class="card">
+      <div class="row"><span class="label">ماین امروز</span><span id="daily-mined">0</span></div>
+      <div class="row"><span class="label">کل ماین</span><span id="total-mined">0</span></div>
+    </div>
+  </div>
 
+  <!-- ========== تب ۲: ماینرها ========== -->
+  <div id="tab-miners" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:12px;">ماینرها</h3>
+      <div id="miners-list"></div>
+    </div>
+  </div>
+
+  <!-- ========== تب ۳: تسک‌ها ========== -->
+  <div id="tab-tasks" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:12px;">تسک‌ها</h3>
+      <div id="tasks-list">
+        <div class="row">
+          <div><div>عضویت در کانال</div><div class="rate">+500 سکه</div></div>
+          <button class="btn btn-small" onclick="claimTask('join_channel')">دریافت</button>
+        </div>
+        <div class="row">
+          <div><div>دعوت از ۳ دوست</div><div class="rate">+1000 سکه</div></div>
+          <button class="btn btn-small" onclick="claimTask('invite_3')">دریافت</button>
+        </div>
+        <div class="row">
+          <div><div>ورود روزانه</div><div class="rate">+100 سکه</div></div>
+          <button class="btn btn-small" onclick="claimTask('daily_login')">دریافت</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== تب ۴: دوستان ========== -->
+  <div id="tab-friends" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:12px;">دوستان</h3>
+      <div class="label">لینک دعوت شما:</div>
+      <div id="invite-link" style="font-size:12px; word-break:break-all; margin:8px 0; opacity:0.8;">...</div>
+      <button class="btn" onclick="shareInvite()">دعوت از دوستان</button>
+    </div>
+    <div class="card">
+      <div class="row"><span class="label">تعداد دعوت‌شده</span><span id="friend-count">0</span></div>
+    </div>
+  </div>
+
+  <!-- ========== تب ۵: پروفایل ========== -->
+  <div id="tab-profile" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:12px;">پروفایل</h3>
+      <div id="profile-info">در حال بارگذاری...</div>
+    </div>
+  </div>
+
+  <!-- ========== نوار تب پایین ========== -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-tab="mining">ماین</div>
     <div class="nav-item" data-tab="miners">ماینرها</div>
@@ -19,6 +132,168 @@
     <div class="nav-item" data-tab="profile">پروفایل</div>
   </nav>
 
-  <script src="js/app.js"></script>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // ⚠️ آدرس Edge Function خودت را اینجا قرار بده
+    const FUNCTION_URL = 'https://akqounxjxmyizotbhsow.supabase.co/functions/v1/verify-telegram';
+    // ⚠️ یوزرنیم ربات خودت را اینجا قرار بده
+    const BOT_USERNAME = 'mamecoinbot';
+
+    const initData = tg.initData;
+
+    // ---------- فراخوانی یکنواخت API ----------
+    async function api(action, extra = {}) {
+      const res = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, action, ...extra })
+      });
+      return res.json();
+    }
+
+    // ---------- تعویض تب ----------
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        item.classList.add('active');
+        document.getElementById(`tab-${item.dataset.tab}`).classList.add('active');
+        tg.HapticFeedback?.selectionChanged();
+        refreshActiveTab();
+      });
+    });
+
+    function refreshActiveTab() {
+      const active = document.querySelector('.tab-content.active');
+      if (!active) return;
+      const id = active.id;
+      if (id === 'tab-mining') renderMining();
+      if (id === 'tab-miners') renderMiners();
+      if (id === 'tab-friends') renderFriends();
+      if (id === 'tab-profile') renderProfile();
+    }
+
+    // ---------- تب ماین ----------
+    async function renderMining() {
+      const data = await api('get');
+      if (!data.success) return;
+
+      document.getElementById('balance').textContent = data.state.balance.toLocaleString('fa-IR');
+      document.getElementById('mining-rate').textContent = data.state.mining_rate;
+      document.getElementById('pending').textContent = data.state.pending_earnings.toLocaleString('fa-IR');
+      document.getElementById('daily-mined').textContent = data.state.daily_mined.toLocaleString('fa-IR');
+      document.getElementById('total-mined').textContent = data.state.total_mined.toLocaleString('fa-IR');
+
+      document.getElementById('collect-btn').onclick = async () => {
+        const result = await api('collect');
+        if (result.success) {
+          tg.HapticFeedback?.notificationOccurred('success');
+          renderMining();
+        } else {
+          tg.HapticFeedback?.notificationOccurred('error');
+        }
+      };
+    }
+
+    // ---------- تب ماینرها ----------
+    async function renderMiners() {
+      const data = await api('get');
+      if (!data.success) return;
+
+      const names = { basic: 'پایه', advanced: 'پیشرفته', pro: 'حرفه‌ای' };
+      const prices = { basic: 100, advanced: 500, pro: 2000 };
+      let html = '';
+
+      for (const [type, name] of Object.entries(names)) {
+        const owned = data.miners.find(m => m.miner_type === type);
+        if (owned) {
+          html += `
+            <div class="row">
+              <div>
+                <div>${name} (سطح ${owned.level})</div>
+                <div class="label">سرعت فعلی: ${(prices[type] / 100) * owned.level}×</div>
+              </div>
+              <button class="btn btn-small" onclick="upgradeMiner('${type}')">ارتقا</button>
+            </div>`;
+        } else {
+          html += `
+            <div class="row">
+              <div>
+                <div>${name}</div>
+                <div class="rate">${prices[type]} سکه</div>
+              </div>
+              <button class="btn btn-small" onclick="buyMiner('${type}')">خرید</button>
+            </div>`;
+        }
+      }
+      document.getElementById('miners-list').innerHTML = html;
+    }
+
+    async function buyMiner(type) {
+      const data = await api('buy_miner', { minerType: type });
+      if (data.success) { tg.HapticFeedback?.notificationOccurred('success'); renderMiners(); }
+      else { tg.HapticFeedback?.notificationOccurred('error'); }
+    }
+
+    async function upgradeMiner(type) {
+      const data = await api('upgrade_miner', { minerType: type });
+      if (data.success) { tg.HapticFeedback?.notificationOccurred('success'); renderMiners(); }
+      else { tg.HapticFeedback?.notificationOccurred('error'); }
+    }
+
+    // ---------- تب تسک‌ها ----------
+    async function claimTask(taskId) {
+      const data = await api('claim_task', { taskId });
+      if (data.success) {
+        tg.HapticFeedback?.notificationOccurred('success');
+        alert(`+${data.reward} سکه دریافت شد`);
+      } else {
+        tg.HapticFeedback?.notificationOccurred('error');
+        alert('قبلاً دریافت شده یا خطا');
+      }
+    }
+
+    // ---------- تب دوستان ----------
+    async function renderFriends() {
+      const data = await api('get');
+      if (!data.success) return;
+
+      document.getElementById('invite-link').textContent =
+        `https://t.me/${BOT_USERNAME}?start=ref_${data.user.id}`;
+      document.getElementById('friend-count').textContent =
+        (data.friend_count || 0).toLocaleString('fa-IR');
+    }
+
+    function shareInvite() {
+      const link = document.getElementById('invite-link').textContent;
+      if (!link.startsWith('https://t.me/')) return;
+      tg.openTelegramLink(
+        `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('بیا MineChill بازی کنیم!')}`
+      );
+    }
+
+    // ---------- تب پروفایل ----------
+    async function renderProfile() {
+      const data = await api('get');
+      if (!data.success) return;
+
+      document.getElementById('profile-info').innerHTML = `
+        <div class="row"><span class="label">نام</span><span>${data.user.first_name || '-'}</span></div>
+        <div class="row"><span class="label">آیدی</span><span>${data.user.id}</span></div>
+        <div class="row"><span class="label">یوزرنیم</span><span>@${data.user.username || 'ندارد'}</span></div>
+        <div class="row"><span class="label">زبان</span><span>${data.user.language_code || '-'}</span></div>
+      `;
+    }
+
+    // ---------- شروع ----------
+    renderMining();
+    setInterval(() => {
+      const active = document.querySelector('.tab-content.active');
+      if (active && active.id === 'tab-mining') renderMining();
+    }, 15000);
+  </script>
 </body>
 </html>
