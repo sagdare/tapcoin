@@ -24,6 +24,7 @@
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
+    font-family: "Vazirmatn";
 }
 
 html {
@@ -31,7 +32,6 @@ html {
 }
 
 body {
-    font-family: "Vazirmatn";
     background: var(--bg);
     color: var(--text);
     min-height: var(--app-height);
