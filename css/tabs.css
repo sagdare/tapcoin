@@ -9,7 +9,7 @@
     backdrop-filter: blur(20px) saturate(1.4);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     border: 1px solid var(--border);
-    border-radius: 50%;
+    border-radius: 50px;
     padding: 6px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -27,7 +27,7 @@
     font-size: 10px;
     font-weight: 600;
     padding: 8px 4px;
-    border-radius: 16px;
+    border-radius: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -36,18 +36,22 @@
     transition: color .2s, background .2s;
 }
 
+/* همه تب‌ها یک رنگ یکدست */
 .tab svg {
     width: 22px;
     height: 22px;
-    transition: transform .2s;
+    transition: transform .2s, color .2s;
+    color: var(--hint);
 }
 
+/* حالت فعال — همه یکسان */
 .tab.active {
     color: var(--accent-2);
     background: rgba(0, 224, 255, 0.08);
 }
 
 .tab.active svg {
+    color: var(--accent-2);
     transform: translateY(-1px) scale(1.05);
 }
 
@@ -55,21 +59,19 @@
     transform: scale(0.9);
 }
 
-/* Indikator متحرک */
-.tabbar::after {
-    content: '';
-    position: absolute;
-    top: 6px;
-    bottom: 6px;
-    width: calc((100% - 12px) / 4 - 4px);
-    border-radius: 16px;
-    background: rgba(124, 92, 255, 0.15);
-    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: none;
-    z-index: -1;
+/* حذف هر استایل خاص برای تب اول */
+.tab:first-child.active,
+.tab[data-tab="mining"].active {
+    background: rgba(0, 224, 255, 0.08);
+    color: var(--accent-2);
 }
 
-/* صفحه‌های تب با انیمیشن ورود */
+.tab:first-child.active svg,
+.tab[data-tab="mining"].active svg {
+    color: var(--accent-2);
+}
+
+/* ---------- Views ---------- */
 .view {
     display: none;
     animation: viewIn .25s cubic-bezier(0.22, 1, 0.36, 1);

@@ -7,7 +7,7 @@ export function renderFriends() {
   const count = store.data?.friend_count || 0;
   const user = getTelegramUser();
   const refLink = user
-    ? `https://t.me/${window.TELEGRAM_BOT_USERNAME || 'YourBot'}?start=ref_${user.id}`
+    ? `https://t.me/${window.TELEGRAM_BOT_USERNAME || 'mamecoinbot'}?start=ref_${user.id}`
     : '—';
 
   root.innerHTML = `
