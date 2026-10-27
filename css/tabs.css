@@ -5,10 +5,11 @@
     right: 12px;
     max-width: 420px;
     margin: 0 auto;
-    background: rgba(22, 22, 31, 0.85);
-    backdrop-filter: blur(20px) saturate(1.4);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    border: 1px solid var(--border);
+    background: rgba(43, 43, 43, 0.45);
+    backdrop-filter: blur(8px) saturate(1.4);
+    -webkit-backdrop-filter: blur(8px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
     border-radius: 50px;
     padding: 6px;
     display: grid;
@@ -46,29 +47,17 @@
 
 /* حالت فعال — همه یکسان */
 .tab.active {
-    color: var(--accent-2);
-    background: rgba(0, 224, 255, 0.08);
+    color: rgba(221, 221, 221, 1);
+    background: rgba(221, 221, 221, 0.08);
 }
 
 .tab.active svg {
-    color: var(--accent-2);
+    color: rgba(221, 221, 221, 1);
     transform: translateY(-1px) scale(1.05);
 }
 
 .tab:active svg {
     transform: scale(0.9);
-}
-
-/* حذف هر استایل خاص برای تب اول */
-.tab:first-child.active,
-.tab[data-tab="mining"].active {
-    background: rgba(0, 224, 255, 0.08);
-    color: var(--accent-2);
-}
-
-.tab:first-child.active svg,
-.tab[data-tab="mining"].active svg {
-    color: var(--accent-2);
 }
 
 /* ---------- Views ---------- */
