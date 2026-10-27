@@ -1,113 +1,196 @@
-/* ===== Glass card ===== */
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(18px) saturate(1.6);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 20px;
-  padding: 18px;
-  margin-bottom: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+/* ===================================================
+   Mining View — Glass + GPU + Persian Layout
+   =================================================== */
+
+:root {
+  --bg-dark: #000000;
+  --card-bg: #121212;
+  --card-radius: 24px;
+  --pill-bg: #1c1c1e;
+  --text-main: #ffffff;
+  --text-muted: #8e8e93;
+  --purple-btn: #b070ff;
+  --green-text: #34c759;
+  --orange-icon: #f59e0b;
 }
 
-/* ===== GPU Card ===== */
-.gpu-card {
-  text-align: center;
-  padding-top: 16px;
-}
-.gpu-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 8px;
-}
-.gpu-title {
-  font-size: 11px; font-weight: 800; letter-spacing: 2px;
-  color: var(--hint);
-}
-.gpu-fan-wrap {
-  display: grid; place-items: center;
-  margin: 8px 0;
-}
-.gpu-fan {
-  width: 160px; height: 160px;
-  filter: drop-shadow(0 0 20px rgba(0, 224, 255, 0.35));
-}
-.fan-blades {
-  transform-origin: 60px 60px;
-  animation: fanSpin 1.2s linear infinite;
-}
-@keyframes fanSpin {
-  to { transform: rotate(360deg); }
+#mining-root {
+  padding-bottom: 100px;
+  font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.hashrate {
-  display: flex; align-items: baseline; justify-content: center; gap: 6px;
-  margin-top: 6px;
+/* ====== Top Header ====== */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  margin-bottom: 10px;
 }
-.hashrate-value {
-  font-size: 30px; font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, #fff 0%, #00e0ff 100%);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -1px;
-}
-.hashrate-unit {
-  font-size: 13px; font-weight: 700; color: var(--accent-2);
-}
-.hashrate-label {
-  font-size: 11px; color: var(--hint); margin-top: 4px;
-}
-
-/* ===== Balance row ===== */
-.balance-row {
-  display: flex; justify-content: space-between; align-items: center;
-}
-.mini-label { font-size: 11px; color: var(--hint); margin-bottom: 3px; }
-.mini-hint { font-size: 10px; color: var(--hint); margin-top: 2px; }
-.mini-value {
-  font-size: 16px; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.mini-value.accent {
-  color: var(--accent-2);
-  background: none; -webkit-text-fill-color: currentColor;
-}
-
-/* ===== Cap bar ===== */
-.cap-header {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 8px;
-}
-.cap-bar {
-  height: 8px; border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.cap-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-2), var(--accent));
-  border-radius: 6px;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 12px rgba(0, 224, 255, 0.5);
-}
-.cap-hint {
-  font-size: 11px; color: var(--hint); margin-top: 8px;
-}
-.cap-hint b { color: var(--warning); }
-
-/* ===== Collect ===== */
-.btn-collect {
-  margin-bottom: 12px;
-}
-.pending-line {
-  display: flex; justify-content: space-between; align-items: center;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* ===== Upgrade ===== */
-.upgrade-row {
-  display: flex; justify-content: space-between; align-items: center;
+.user-info {
+  display: flex;
+  align-items: center;
   gap: 12px;
+}
+.avatar-circle {
+  width: 38px; height: 38px;
+  background: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: #000;
+}
+.avatar-circle svg { width: 20px; height: 20px; }
+
+.balance-pill {
+  background: var(--pill-bg);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 15px;
+}
+.mini-coin { width: 18px; height: 18px; }
+.plus-btn {
+  background: #b070ff; color: white;
+  border: none; width: 20px; height: 20px;
+  border-radius: 50%; font-size: 16px; line-height: 1;
+  display: grid; place-items: center; cursor: pointer;
+  margin-right: 4px;
+}
+.level-pill {
+  background: var(--pill-bg);
+  padding: 8px 14px; border-radius: 20px;
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 700; font-size: 14px;
+}
+
+/* ====== Main Mining Card ====== */
+.main-mining-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 24px 20px;
+  text-align: center;
+  margin: 0 16px 16px;
+}
+.mining-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 20px;
+}
+.m-title { color: var(--text-muted); font-size: 13px; margin-bottom: 4px; }
+.m-subtitle { color: var(--text-main); font-size: 20px; font-weight: 700; }
+.timer-pill {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--green-text);
+  padding: 4px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.timer-pill::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--green-text); border-radius: 50%;
+}
+
+/* ====== Fan Spin (جایگزین سکه) ====== */
+.coin-container {
+  position: relative;
+  width: 200px; height: 200px;
+  margin: 0 auto 24px;
+  display: grid; place-items: center;
+}
+.coin-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  padding: 4px;
+  background: conic-gradient(from 180deg, #b070ff, #00e0ff, #b070ff);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: spinRing 4s linear infinite;
+}
+
+.fan-spin {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: transparent; /* پس‌زمینه رو شفاف کردم که عکس فن دیده بشه */
+  display: grid; place-items: center;
+  animation: float 3s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+.fan-spin img { 
+  width: 100%; height: 100%; 
+  object-fit: contain; 
+  border-radius: 50%; 
+  animation: fanSpin 1.6s linear infinite; /* خود فن میچرخه */
+  transform-origin: center center;
+}
+
+/* افکت درخشش روی فن */
+.fan-spin::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: 0 0 30px rgba(0, 224, 255, 0.4);
+  pointer-events: none;
+}
+
+@keyframes spinRing { 100% { transform: rotate(360deg); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes fanSpin { 100% { transform: rotate(360deg); } }
+
+/* ====== Reward Section ====== */
+.reward-section { margin-bottom: 20px; }
+.reward-label { color: var(--text-muted); font-size: 13px; margin-bottom: 4px; }
+.reward-value {
+  font-size: 36px; font-weight: 800; color: var(--text-main);
+  display: flex; align-items: baseline; justify-content: center; gap: 6px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr; /* برای اینکه اعداد و واحد درست کنار هم قرار بگیرن */
+}
+.reward-value .currency { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+.reward-sub { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+/* ====== Claim Button ====== */
+.btn-claim {
+  background: var(--purple-btn);
+  color: white; border: none;
+  width: 100%; padding: 16px;
+  border-radius: 16px; font-size: 16px; font-weight: 600;
+  transition: opacity 0.2s, transform 0.1s;
+  font-family: 'Vazirmatn', sans-serif;
+}
+.btn-claim:active { transform: scale(0.98); }
+.btn-claim:disabled { opacity: 0.5; }
+
+/* ====== List Section ====== */
+.list-section {
+  margin: 0 16px;
+}
+.list-title {
+  color: var(--text-muted); font-size: 12px; font-weight: 600;
+  margin-bottom: 8px; margin-right: 8px; letter-spacing: 1px;
+}
+.list-item {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.item-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center; color: white;
+  flex-shrink: 0;
+}
+.item-icon svg { width: 20px; height: 20px; }
+.item-icon.purple { background: #9c5cff; }
+.item-icon.green { background: #34c759; }
+.item-icon.orange { background: #ff9f0a; }
+
+.item-text { flex: 1; text-align: right; }
+.item-name { color: var(--text-main); font-size: 15px; font-weight: 500; }
+.item-sub { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.item-val { color: var(--text-main); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.green-text { color: var(--green-text); }
+
+.bottom-hint {
+  text-align: center; color: var(--text-muted);
+  font-size: 12px; margin-top: 20px;
 }
